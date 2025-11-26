@@ -6,7 +6,16 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getHello(): { status: string; message: string; timestamp: string } {
+    return {
+      status: 'ok',
+      message: 'Ichrak API is running',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('health')
+  healthCheck(): { status: string } {
+    return { status: 'ok' };
   }
 }
