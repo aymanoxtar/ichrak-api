@@ -13,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { Role } from '../../common/enums';
 import { Service } from '../../services/entities/service.entity';
 import { Domain } from '../../domains/entities/domain.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 @Entity('users')
 export class User {
@@ -70,6 +71,14 @@ export class User {
   @ManyToOne(() => Domain, { nullable: true })
   @JoinColumn({ name: 'domainId' })
   domain: Domain | null;
+
+  // Category for ARTISAN role (Plombier, Electricien, etc.)
+  @Column('uuid', { nullable: true })
+  categoryId: string | null;
+
+  @ManyToOne(() => Category, { nullable: true })
+  @JoinColumn({ name: 'categoryId' })
+  category: Category | null;
 
   // Geolocation (للتوصيل - يتزاد mor Client يبغي يشري)
   @Column({ nullable: true, type: 'decimal', precision: 10, scale: 8 })

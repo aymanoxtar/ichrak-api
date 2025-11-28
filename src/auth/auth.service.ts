@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { OAuth2Client } from 'google-auth-library';
 import { User } from '../users/entities/user.entity';
 import { Domain } from '../domains/entities/domain.entity';
+import { Category } from '../categories/entities/category.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { GoogleAuthDto } from './dto/google-auth.dto';
@@ -35,6 +36,8 @@ export class AuthService {
     private userRepository: Repository<User>,
     @InjectRepository(Domain)
     private domainRepository: Repository<Domain>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
     private jwtService: JwtService,
   ) {}
 
@@ -59,6 +62,29 @@ export class AuthService {
 
       if (!domain) {
         throw new BadRequestException('Invalid domain');
+      }
+    }
+
+    // Validate categoryId if role is ARTISAN
+    if (registerDto.role === Role.ARTISAN) {
+      if (!registerDto.categoryId) {
+        throw new BadRequestException('Category is required for Artisan role');
+      }
+
+      const category = await this.categoryRepository.findOne({
+        where: { id: registerDto.categoryId },
+      });
+
+      if (!category) {
+        throw new BadRequestException('Invalid category');
+      }
+
+      if (!registerDto.phone) {
+        throw new BadRequestException('Phone is required for Artisan role');
+      }
+
+      if (!registerDto.city) {
+        throw new BadRequestException('City is required for Artisan role');
       }
     }
 

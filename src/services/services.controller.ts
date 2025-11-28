@@ -25,7 +25,7 @@ export class ServicesController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ARTISAN, Role.ADMIN)
+  @Roles(Role.ARTISAN, Role.ADMIN, Role.SUPER_ADMIN)
   create(
     @Body() createServiceDto: CreateServiceDto,
     @CurrentUser() user: User,

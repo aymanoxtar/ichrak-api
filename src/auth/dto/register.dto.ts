@@ -5,6 +5,8 @@ import {
   IsEnum,
   IsOptional,
   IsUUID,
+  ValidateIf,
+  IsNotEmpty,
 } from 'class-validator';
 import { Role } from '../../common/enums';
 
@@ -22,7 +24,9 @@ export class RegisterDto {
   @IsString()
   lastName: string;
 
-  @IsOptional()
+  // Required for ARTISAN
+  @ValidateIf((o) => o.role === Role.ARTISAN)
+  @IsNotEmpty({ message: 'Phone is required for artisans' })
   @IsString()
   phone?: string;
 
@@ -30,7 +34,9 @@ export class RegisterDto {
   @IsString()
   address?: string;
 
-  @IsOptional()
+  // Required for ARTISAN
+  @ValidateIf((o) => o.role === Role.ARTISAN)
+  @IsNotEmpty({ message: 'City is required for artisans' })
   @IsString()
   city?: string;
 
@@ -50,4 +56,10 @@ export class RegisterDto {
   @IsOptional()
   @IsUUID()
   domainId?: string;
+
+  // Required for ARTISAN - The service category they provide
+  @ValidateIf((o) => o.role === Role.ARTISAN)
+  @IsNotEmpty({ message: 'Category ID is required for artisans' })
+  @IsUUID()
+  categoryId?: string;
 }

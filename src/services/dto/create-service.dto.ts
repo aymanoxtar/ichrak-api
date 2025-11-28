@@ -35,4 +35,8 @@ export class CreateServiceDto {
 
   @IsUUID()
   categoryId: string;
+
+  @IsOptional()
+  @IsUUID()
+  artisanId?: string; // Super Admin can specify artisan
 }

@@ -22,9 +22,15 @@ export class ServicesService {
     createServiceDto: CreateServiceDto,
     user: User,
   ): Promise<Service> {
+    // Super Admin can specify artisanId, otherwise use current user's ID
+    const artisanId =
+      user.role === Role.SUPER_ADMIN && createServiceDto.artisanId
+        ? createServiceDto.artisanId
+        : user.id;
+
     const service = this.serviceRepository.create({
       ...createServiceDto,
-      artisanId: user.id,
+      artisanId,
     });
     return this.serviceRepository.save(service);
   }
