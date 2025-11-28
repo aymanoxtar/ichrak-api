@@ -48,6 +48,7 @@ async function bootstrap() {
     .addTag('Promo Codes', 'Promotional codes system')
     .addTag('Locations', 'Delivery locations')
     .addTag('Pre-Calculated', 'Offers and pricing calculations')
+    .addTag('Services', 'Artisan services (Plombier, Electricien, etc.)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
