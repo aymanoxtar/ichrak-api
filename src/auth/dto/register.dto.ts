@@ -25,7 +25,7 @@ export class RegisterDto {
   lastName: string;
 
   // Required for ARTISAN
-  @ValidateIf((o) => o.role === Role.ARTISAN)
+  @ValidateIf((o: RegisterDto) => o.role === Role.ARTISAN)
   @IsNotEmpty({ message: 'Phone is required for artisans' })
   @IsString()
   phone?: string;
@@ -35,7 +35,7 @@ export class RegisterDto {
   address?: string;
 
   // Required for ARTISAN
-  @ValidateIf((o) => o.role === Role.ARTISAN)
+  @ValidateIf((o: RegisterDto) => o.role === Role.ARTISAN)
   @IsNotEmpty({ message: 'City is required for artisans' })
   @IsString()
   city?: string;
@@ -58,7 +58,7 @@ export class RegisterDto {
   domainId?: string;
 
   // Required for ARTISAN - The service they provide
-  @ValidateIf((o) => o.role === Role.ARTISAN)
+  @ValidateIf((o: RegisterDto) => o.role === Role.ARTISAN)
   @IsNotEmpty({ message: 'Service ID is required for artisans' })
   @IsUUID()
   serviceId?: string;

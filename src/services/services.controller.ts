@@ -38,7 +38,10 @@ export class ServicesController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a service template (Super Admin only)' })
   @ApiResponse({ status: 201, description: 'Service template created' })
-  @ApiResponse({ status: 403, description: 'Forbidden - requires SUPER_ADMIN role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - requires SUPER_ADMIN role',
+  })
   create(
     @Body() createServiceDto: CreateServiceDto,
     @CurrentUser() user: User,
@@ -47,8 +50,14 @@ export class ServicesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active service templates or filter by category' })
-  @ApiQuery({ name: 'categoryId', required: false, description: 'Filter by category ID' })
+  @ApiOperation({
+    summary: 'Get all active service templates or filter by category',
+  })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    description: 'Filter by category ID',
+  })
   @ApiResponse({ status: 200, description: 'List of service templates' })
   findAll(@Query('categoryId') categoryId?: string) {
     if (categoryId) {
@@ -71,7 +80,10 @@ export class ServicesController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update a service template (Super Admin only)' })
   @ApiResponse({ status: 200, description: 'Service template updated' })
-  @ApiResponse({ status: 403, description: 'Forbidden - requires SUPER_ADMIN role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - requires SUPER_ADMIN role',
+  })
   update(
     @Param('id') id: string,
     @Body() updateServiceDto: UpdateServiceDto,
@@ -84,9 +96,14 @@ export class ServicesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Toggle service template active status (Super Admin only)' })
+  @ApiOperation({
+    summary: 'Toggle service template active status (Super Admin only)',
+  })
   @ApiResponse({ status: 200, description: 'Active status toggled' })
-  @ApiResponse({ status: 403, description: 'Forbidden - requires SUPER_ADMIN role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - requires SUPER_ADMIN role',
+  })
   toggleActive(@Param('id') id: string, @CurrentUser() user: User) {
     return this.servicesService.toggleActive(id, user);
   }
@@ -97,7 +114,10 @@ export class ServicesController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete a service template (Super Admin only)' })
   @ApiResponse({ status: 200, description: 'Service template deleted' })
-  @ApiResponse({ status: 403, description: 'Forbidden - requires SUPER_ADMIN role' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - requires SUPER_ADMIN role',
+  })
   remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.servicesService.remove(id, user);
   }

@@ -21,7 +21,10 @@ export class ReviewsService {
     private userRepository: Repository<User>,
   ) {}
 
-  async create(createReviewDto: CreateReviewDto, client: User): Promise<Review> {
+  async create(
+    createReviewDto: CreateReviewDto,
+    client: User,
+  ): Promise<Review> {
     // Verify artisan exists and is actually an artisan
     const artisan = await this.userRepository.findOne({
       where: { id: createReviewDto.artisanId, role: Role.ARTISAN },
@@ -55,7 +58,11 @@ export class ReviewsService {
     });
   }
 
-  async findByArtisan(artisanId: string): Promise<{ reviews: Review[]; averageRating: number; totalReviews: number }> {
+  async findByArtisan(artisanId: string): Promise<{
+    reviews: Review[];
+    averageRating: number;
+    totalReviews: number;
+  }> {
     const reviews = await this.reviewRepository.find({
       where: { artisanId },
       relations: ['client'],
@@ -63,9 +70,10 @@ export class ReviewsService {
     });
 
     const totalReviews = reviews.length;
-    const averageRating = totalReviews > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
-      : 0;
+    const averageRating =
+      totalReviews > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+        : 0;
 
     return {
       reviews,
@@ -87,7 +95,11 @@ export class ReviewsService {
     return review;
   }
 
-  async update(id: string, updateReviewDto: UpdateReviewDto, user: User): Promise<Review> {
+  async update(
+    id: string,
+    updateReviewDto: UpdateReviewDto,
+    user: User,
+  ): Promise<Review> {
     const review = await this.findOne(id);
 
     // Only the client who wrote the review can update it

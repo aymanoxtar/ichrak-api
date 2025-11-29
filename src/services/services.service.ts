@@ -25,7 +25,9 @@ export class ServicesService {
   ): Promise<Service> {
     // Only Super Admin can create service templates
     if (user.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('Only Super Admin can create service templates');
+      throw new ForbiddenException(
+        'Only Super Admin can create service templates',
+      );
     }
 
     const service = this.serviceRepository.create(createServiceDto);
@@ -66,7 +68,9 @@ export class ServicesService {
   ): Promise<Service> {
     // Only Super Admin can update service templates
     if (user.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('Only Super Admin can update service templates');
+      throw new ForbiddenException(
+        'Only Super Admin can update service templates',
+      );
     }
 
     const service = await this.findOne(id);
@@ -77,7 +81,9 @@ export class ServicesService {
   async remove(id: string, user: User): Promise<void> {
     // Only Super Admin can delete service templates
     if (user.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('Only Super Admin can delete service templates');
+      throw new ForbiddenException(
+        'Only Super Admin can delete service templates',
+      );
     }
 
     const service = await this.findOne(id);
@@ -87,7 +93,9 @@ export class ServicesService {
   async toggleActive(id: string, user: User): Promise<Service> {
     // Only Super Admin can toggle
     if (user.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('Only Super Admin can toggle service templates');
+      throw new ForbiddenException(
+        'Only Super Admin can toggle service templates',
+      );
     }
 
     const service = await this.findOne(id);

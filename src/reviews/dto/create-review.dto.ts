@@ -8,12 +8,18 @@ export class CreateReviewDto {
   @Max(5)
   rating: number;
 
-  @ApiPropertyOptional({ example: 'Excellent service!', description: 'Review comment' })
+  @ApiPropertyOptional({
+    example: 'Excellent service!',
+    description: 'Review comment',
+  })
   @IsOptional()
   @IsString()
   comment?: string;
 
-  @ApiProperty({ example: 'uuid-of-artisan', description: 'Artisan ID being reviewed' })
+  @ApiProperty({
+    example: 'uuid-of-artisan',
+    description: 'Artisan ID being reviewed',
+  })
   @IsUUID()
   artisanId: string;
 }

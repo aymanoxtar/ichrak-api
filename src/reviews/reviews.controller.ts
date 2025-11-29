@@ -7,14 +7,12 @@ import {
   Param,
   Delete,
   UseGuards,
-  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -37,7 +35,10 @@ export class ReviewsController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a review for an artisan (Client only)' })
   @ApiResponse({ status: 201, description: 'Review created successfully' })
-  @ApiResponse({ status: 400, description: 'Already reviewed or artisan not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Already reviewed or artisan not found',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden - requires CLIENT role' })
   create(@Body() createReviewDto: CreateReviewDto, @CurrentUser() user: User) {
     return this.reviewsService.create(createReviewDto, user);
@@ -51,7 +52,9 @@ export class ReviewsController {
   }
 
   @Get('artisan/:artisanId')
-  @ApiOperation({ summary: 'Get all reviews for an artisan with average rating' })
+  @ApiOperation({
+    summary: 'Get all reviews for an artisan with average rating',
+  })
   @ApiResponse({ status: 200, description: 'Reviews with average rating' })
   findByArtisan(@Param('artisanId') artisanId: string) {
     return this.reviewsService.findByArtisan(artisanId);
