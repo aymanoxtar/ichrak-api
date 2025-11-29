@@ -11,6 +11,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../common/enums';
 
+// Service = Template created by Super Admin (no price, no artisan)
 @Injectable()
 export class ServicesService {
   constructor(
@@ -22,43 +23,33 @@ export class ServicesService {
     createServiceDto: CreateServiceDto,
     user: User,
   ): Promise<Service> {
-    // Super Admin can specify artisanId, otherwise use current user's ID
-    const artisanId =
-      user.role === Role.SUPER_ADMIN && createServiceDto.artisanId
-        ? createServiceDto.artisanId
-        : user.id;
+    // Only Super Admin can create service templates
+    if (user.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Only Super Admin can create service templates');
+    }
 
-    const service = this.serviceRepository.create({
-      ...createServiceDto,
-      artisanId,
-    });
+    const service = this.serviceRepository.create(createServiceDto);
     return this.serviceRepository.save(service);
   }
 
   async findAll(): Promise<Service[]> {
     return this.serviceRepository.find({
-      relations: ['artisan', 'category', 'category.domain'],
-    });
-  }
-
-  async findByArtisan(artisanId: string): Promise<Service[]> {
-    return this.serviceRepository.find({
-      where: { artisanId },
       relations: ['category', 'category.domain'],
+      where: { isActive: true },
     });
   }
 
   async findByCategory(categoryId: string): Promise<Service[]> {
     return this.serviceRepository.find({
-      where: { categoryId },
-      relations: ['artisan', 'category', 'category.domain'],
+      where: { categoryId, isActive: true },
+      relations: ['category', 'category.domain'],
     });
   }
 
   async findOne(id: string): Promise<Service> {
     const service = await this.serviceRepository.findOne({
       where: { id },
-      relations: ['artisan', 'category', 'category.domain'],
+      relations: ['category', 'category.domain'],
     });
 
     if (!service) {
@@ -73,37 +64,34 @@ export class ServicesService {
     updateServiceDto: UpdateServiceDto,
     user: User,
   ): Promise<Service> {
-    const service = await this.findOne(id);
-
-    // Only artisan owner or super admin can update
-    if (service.artisanId !== user.id && user.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('You can only update your own services');
+    // Only Super Admin can update service templates
+    if (user.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Only Super Admin can update service templates');
     }
 
+    const service = await this.findOne(id);
     Object.assign(service, updateServiceDto);
     return this.serviceRepository.save(service);
   }
 
   async remove(id: string, user: User): Promise<void> {
-    const service = await this.findOne(id);
-
-    // Only artisan owner or super admin can delete
-    if (service.artisanId !== user.id && user.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('You can only delete your own services');
+    // Only Super Admin can delete service templates
+    if (user.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Only Super Admin can delete service templates');
     }
 
+    const service = await this.findOne(id);
     await this.serviceRepository.remove(service);
   }
 
-  async toggleAvailability(id: string, user: User): Promise<Service> {
-    const service = await this.findOne(id);
-
-    // Only artisan owner or super admin can toggle
-    if (service.artisanId !== user.id && user.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('You can only toggle your own services');
+  async toggleActive(id: string, user: User): Promise<Service> {
+    // Only Super Admin can toggle
+    if (user.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Only Super Admin can toggle service templates');
     }
 
-    service.isAvailable = !service.isAvailable;
+    const service = await this.findOne(id);
+    service.isActive = !service.isActive;
     return this.serviceRepository.save(service);
   }
 }

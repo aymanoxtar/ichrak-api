@@ -11,9 +11,8 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from '../../common/enums';
-import { Service } from '../../services/entities/service.entity';
 import { Domain } from '../../domains/entities/domain.entity';
-import { Category } from '../../categories/entities/category.entity';
+import { Service } from '../../services/entities/service.entity';
 
 @Entity('users')
 export class User {
@@ -72,13 +71,13 @@ export class User {
   @JoinColumn({ name: 'domainId' })
   domain: Domain | null;
 
-  // Category for ARTISAN role (Plombier, Electricien, etc.)
+  // Service for ARTISAN role (linked to Service → Category)
   @Column('uuid', { nullable: true })
-  categoryId: string | null;
+  serviceId: string | null;
 
-  @ManyToOne(() => Category, { nullable: true })
-  @JoinColumn({ name: 'categoryId' })
-  category: Category | null;
+  @ManyToOne(() => Service, { nullable: true })
+  @JoinColumn({ name: 'serviceId' })
+  service: Service | null;
 
   // Geolocation (للتوصيل - يتزاد mor Client يبغي يشري)
   @Column({ nullable: true, type: 'decimal', precision: 10, scale: 8 })
@@ -96,9 +95,6 @@ export class User {
 
   @Column({ nullable: true })
   facebookId: string; // Facebook user ID
-
-  @OneToMany(() => Service, (service) => service.artisan)
-  services: Service[];
 
   @CreateDateColumn()
   createdAt: Date;

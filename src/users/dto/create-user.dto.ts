@@ -54,4 +54,9 @@ export class CreateUserDto {
   @IsOptional()
   @IsUUID()
   domainId?: string;
+
+  // Required for ARTISAN role (linked to Service)
+  @IsOptional()
+  @IsUUID()
+  serviceId?: string;
 }

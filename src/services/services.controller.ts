@@ -26,6 +26,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Role } from '../common/enums';
 import { User } from '../users/entities/user.entity';
 
+// Service = Template created by Super Admin (no price, no artisan)
 @ApiTags('Services')
 @Controller('services')
 export class ServicesController {
@@ -33,11 +34,11 @@ export class ServicesController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ARTISAN, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create a new service' })
-  @ApiResponse({ status: 201, description: 'Service created successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - requires ARTISAN, ADMIN, or SUPER_ADMIN role' })
+  @ApiOperation({ summary: 'Create a service template (Super Admin only)' })
+  @ApiResponse({ status: 201, description: 'Service template created' })
+  @ApiResponse({ status: 403, description: 'Forbidden - requires SUPER_ADMIN role' })
   create(
     @Body() createServiceDto: CreateServiceDto,
     @CurrentUser() user: User,
@@ -46,17 +47,10 @@ export class ServicesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all services or filter by artisan/category' })
-  @ApiQuery({ name: 'artisanId', required: false, description: 'Filter by artisan ID' })
+  @ApiOperation({ summary: 'Get all active service templates or filter by category' })
   @ApiQuery({ name: 'categoryId', required: false, description: 'Filter by category ID' })
-  @ApiResponse({ status: 200, description: 'List of services' })
-  findAll(
-    @Query('artisanId') artisanId?: string,
-    @Query('categoryId') categoryId?: string,
-  ) {
-    if (artisanId) {
-      return this.servicesService.findByArtisan(artisanId);
-    }
+  @ApiResponse({ status: 200, description: 'List of service templates' })
+  findAll(@Query('categoryId') categoryId?: string) {
     if (categoryId) {
       return this.servicesService.findByCategory(categoryId);
     }
@@ -64,21 +58,20 @@ export class ServicesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a service by ID' })
-  @ApiResponse({ status: 200, description: 'Service found' })
-  @ApiResponse({ status: 404, description: 'Service not found' })
+  @ApiOperation({ summary: 'Get a service template by ID' })
+  @ApiResponse({ status: 200, description: 'Service template found' })
+  @ApiResponse({ status: 404, description: 'Service template not found' })
   findOne(@Param('id') id: string) {
     return this.servicesService.findOne(id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ARTISAN, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update a service' })
-  @ApiResponse({ status: 200, description: 'Service updated successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - can only update own services' })
-  @ApiResponse({ status: 404, description: 'Service not found' })
+  @ApiOperation({ summary: 'Update a service template (Super Admin only)' })
+  @ApiResponse({ status: 200, description: 'Service template updated' })
+  @ApiResponse({ status: 403, description: 'Forbidden - requires SUPER_ADMIN role' })
   update(
     @Param('id') id: string,
     @Body() updateServiceDto: UpdateServiceDto,
@@ -87,25 +80,24 @@ export class ServicesController {
     return this.servicesService.update(id, updateServiceDto, user);
   }
 
-  @Patch(':id/toggle-availability')
+  @Patch(':id/toggle-active')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ARTISAN, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Toggle service availability' })
-  @ApiResponse({ status: 200, description: 'Availability toggled successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - can only toggle own services' })
-  toggleAvailability(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.servicesService.toggleAvailability(id, user);
+  @ApiOperation({ summary: 'Toggle service template active status (Super Admin only)' })
+  @ApiResponse({ status: 200, description: 'Active status toggled' })
+  @ApiResponse({ status: 403, description: 'Forbidden - requires SUPER_ADMIN role' })
+  toggleActive(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.servicesService.toggleActive(id, user);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ARTISAN, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Delete a service' })
-  @ApiResponse({ status: 200, description: 'Service deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - can only delete own services' })
-  @ApiResponse({ status: 404, description: 'Service not found' })
+  @ApiOperation({ summary: 'Delete a service template (Super Admin only)' })
+  @ApiResponse({ status: 200, description: 'Service template deleted' })
+  @ApiResponse({ status: 403, description: 'Forbidden - requires SUPER_ADMIN role' })
   remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.servicesService.remove(id, user);
   }

@@ -17,6 +17,7 @@ import { LocationsModule } from './locations/locations.module';
 import { PreCalculatedModule } from './pre-calculated/pre-calculated.module';
 import { OrdersModule } from './orders/orders.module';
 import { CartModule } from './cart/cart.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { CartModule } from './cart/cart.module';
     PreCalculatedModule,
     OrdersModule,
     CartModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

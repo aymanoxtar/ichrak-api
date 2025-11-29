@@ -2,11 +2,14 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
+import { Service } from '../services/entities/service.entity';
+import { Domain } from '../domains/entities/domain.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '../common/enums';
@@ -16,6 +19,10 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Service)
+    private serviceRepository: Repository<Service>,
+    @InjectRepository(Domain)
+    private domainRepository: Repository<Domain>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -25,6 +32,44 @@ export class UsersService {
 
     if (existingUser) {
       throw new ConflictException('Email already exists');
+    }
+
+    // Validate serviceId if role is ARTISAN
+    if (createUserDto.role === Role.ARTISAN) {
+      if (!createUserDto.serviceId) {
+        throw new BadRequestException('Service is required for Artisan role');
+      }
+
+      const service = await this.serviceRepository.findOne({
+        where: { id: createUserDto.serviceId, isActive: true },
+      });
+
+      if (!service) {
+        throw new BadRequestException('Invalid or inactive service');
+      }
+
+      if (!createUserDto.phone) {
+        throw new BadRequestException('Phone is required for Artisan role');
+      }
+
+      if (!createUserDto.city) {
+        throw new BadRequestException('City is required for Artisan role');
+      }
+    }
+
+    // Validate domainId if role is ADMIN
+    if (createUserDto.role === Role.ADMIN) {
+      if (!createUserDto.domainId) {
+        throw new BadRequestException('Domain is required for Admin role');
+      }
+
+      const domain = await this.domainRepository.findOne({
+        where: { id: createUserDto.domainId },
+      });
+
+      if (!domain) {
+        throw new BadRequestException('Invalid domain');
+      }
     }
 
     const user = this.userRepository.create(createUserDto);
@@ -54,7 +99,7 @@ export class UsersService {
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['services'],
+      relations: ['service', 'service.category', 'domain'],
     });
 
     if (!user) {

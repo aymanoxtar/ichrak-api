@@ -57,9 +57,9 @@ export class RegisterDto {
   @IsUUID()
   domainId?: string;
 
-  // Required for ARTISAN - The service category they provide
+  // Required for ARTISAN - The service they provide
   @ValidateIf((o) => o.role === Role.ARTISAN)
-  @IsNotEmpty({ message: 'Category ID is required for artisans' })
+  @IsNotEmpty({ message: 'Service ID is required for artisans' })
   @IsUUID()
-  categoryId?: string;
+  serviceId?: string;
 }
