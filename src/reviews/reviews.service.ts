@@ -34,6 +34,22 @@ export class ReviewsService {
       throw new BadRequestException('Artisan not found');
     }
 
+    // Get full client info to check city
+    const fullClient = await this.userRepository.findOne({
+      where: { id: client.id },
+    });
+
+    // Client can only review artisans in the same city
+    if (
+      fullClient?.city &&
+      artisan.city &&
+      fullClient.city.toLowerCase() !== artisan.city.toLowerCase()
+    ) {
+      throw new BadRequestException(
+        'You can only review artisans in your city',
+      );
+    }
+
     // Check if client already reviewed this artisan
     const existingReview = await this.reviewRepository.findOne({
       where: { clientId: client.id, artisanId: createReviewDto.artisanId },

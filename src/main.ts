@@ -50,6 +50,11 @@ async function bootstrap() {
     .addTag('Pre-Calculated', 'Offers and pricing calculations')
     .addTag('Services', 'Service templates (Super Admin creates)')
     .addTag('Reviews', 'Client reviews for Artisans')
+    .addTag('Artisans', 'Browse artisans by location (nearby search)')
+    .addTag(
+      'Admin - Referral Management',
+      'Super Admin referral statistics and user management',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

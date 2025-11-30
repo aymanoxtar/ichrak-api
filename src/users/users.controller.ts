@@ -9,7 +9,12 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -106,7 +111,10 @@ export class UsersController {
 
   @Get('me/referral-earnings')
   @ApiOperation({ summary: 'Get my referral earnings' })
-  @ApiResponse({ status: 200, description: 'Returns referral earnings details' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns referral earnings details',
+  })
   getMyReferralEarnings(@CurrentUser() user: User) {
     return this.usersService.getReferralEarnings(user.id);
   }

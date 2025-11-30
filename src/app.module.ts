@@ -18,6 +18,8 @@ import { PreCalculatedModule } from './pre-calculated/pre-calculated.module';
 import { OrdersModule } from './orders/orders.module';
 import { CartModule } from './cart/cart.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { ArtisansModule } from './artisans/artisans.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -94,6 +96,8 @@ import { ReviewsModule } from './reviews/reviews.module';
     OrdersModule,
     CartModule,
     ReviewsModule,
+    ArtisansModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
