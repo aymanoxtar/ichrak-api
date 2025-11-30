@@ -122,6 +122,35 @@ export class OrdersService {
     // Create order
     const orderNumber = await this.generateOrderNumber();
 
+    // Calculate referral commissions
+    // Get client with referral info
+    const clientWithReferral = await this.userRepository.findOne({
+      where: { id: client.id },
+      relations: ['referredBy', 'referredBy.referredBy'],
+    });
+
+    let level1ReferrerId: string | null = null;
+    let level1Commission = 0;
+    let level2ReferrerId: string | null = null;
+    let level2Commission = 0;
+    let superAdminCommission = 0;
+
+    if (clientWithReferral?.referredById && totalCommission > 0) {
+      // Level 1: Direct referrer gets 81% (90% * 90%)
+      level1ReferrerId = clientWithReferral.referredById;
+      level1Commission = totalCommission * 0.81;
+
+      // Super Admin gets 10%
+      superAdminCommission = totalCommission * 0.1;
+
+      // Check if Level 1 referrer was also referred (Level 2)
+      if (clientWithReferral.referredBy?.referredById) {
+        level2ReferrerId = clientWithReferral.referredBy.referredById;
+        // Level 2 gets 9% (90% * 10%)
+        level2Commission = totalCommission * 0.09;
+      }
+    }
+
     const order = this.orderRepository.create({
       orderNumber,
       clientId: client.id,
@@ -130,6 +159,11 @@ export class OrdersService {
       deliveryFee,
       total,
       totalCommission,
+      level1ReferrerId,
+      level1Commission,
+      level2ReferrerId,
+      level2Commission,
+      superAdminCommission,
       promoCodeId: createDto.promoCodeId || null,
       deliveryAddress: createDto.deliveryAddress,
       deliveryCity: createDto.deliveryCity,
@@ -265,6 +299,30 @@ export class OrdersService {
             'soldCount',
             item.quantity,
           );
+        }
+
+        // Distribute referral commissions
+        if (!order.commissionsDistributed && order.totalCommission > 0) {
+          // Level 1 referrer gets their commission
+          if (order.level1ReferrerId && order.level1Commission > 0) {
+            await this.userRepository.increment(
+              { id: order.level1ReferrerId },
+              'referralEarnings',
+              order.level1Commission,
+            );
+          }
+
+          // Level 2 referrer gets their commission
+          if (order.level2ReferrerId && order.level2Commission > 0) {
+            await this.userRepository.increment(
+              { id: order.level2ReferrerId },
+              'referralEarnings',
+              order.level2Commission,
+            );
+          }
+
+          // Mark commissions as distributed
+          order.commissionsDistributed = true;
         }
         break;
     }

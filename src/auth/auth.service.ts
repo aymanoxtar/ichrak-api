@@ -41,6 +41,26 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  // Generate unique referral code (REF-XXXXXX)
+  private async generateReferralCode(): Promise<string> {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code: string;
+    let exists = true;
+
+    while (exists) {
+      code = 'REF-';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const existing = await this.userRepository.findOne({
+        where: { referralCode: code },
+      });
+      exists = !!existing;
+    }
+
+    return code!;
+  }
+
   async register(registerDto: RegisterDto) {
     const existingUser = await this.userRepository.findOne({
       where: { email: registerDto.email },
@@ -88,7 +108,32 @@ export class AuthService {
       }
     }
 
-    const user = this.userRepository.create(registerDto);
+    // Handle referral code - find referrer
+    let referredById: string | null = null;
+    if (registerDto.referralCode) {
+      const referrer = await this.userRepository.findOne({
+        where: { referralCode: registerDto.referralCode.toUpperCase() },
+      });
+
+      if (referrer) {
+        referredById = referrer.id;
+        // Increment referrer's referral count
+        await this.userRepository.increment(
+          { id: referrer.id },
+          'referralCount',
+          1,
+        );
+      }
+    }
+
+    // Generate unique referral code for new user
+    const newReferralCode = await this.generateReferralCode();
+
+    const user = this.userRepository.create({
+      ...registerDto,
+      referralCode: newReferralCode,
+      referredById,
+    });
     await this.userRepository.save(user);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -173,7 +218,8 @@ export class AuthService {
           await this.userRepository.save(user);
         }
       } else {
-        // Create new user
+        // Create new user with referral code
+        const referralCode = await this.generateReferralCode();
         user = this.userRepository.create({
           email: payload.email,
           firstName: payload.given_name || '',
@@ -183,6 +229,7 @@ export class AuthService {
           profileImage: payload.picture,
           role: Role.CLIENT, // Default role
           isActive: true,
+          referralCode,
         });
         await this.userRepository.save(user);
       }
@@ -233,7 +280,8 @@ export class AuthService {
           await this.userRepository.save(user);
         }
       } else {
-        // Create new user
+        // Create new user with referral code
+        const referralCode = await this.generateReferralCode();
         const nameParts = facebookUser.name.split(' ');
         user = this.userRepository.create({
           email: facebookUser.email,
@@ -244,6 +292,7 @@ export class AuthService {
           profileImage: facebookUser.picture?.data?.url,
           role: Role.CLIENT, // Default role
           isActive: true,
+          referralCode,
         });
         await this.userRepository.save(user);
       }

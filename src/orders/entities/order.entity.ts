@@ -63,6 +63,33 @@ export class Order {
   @Column('decimal', { precision: 10, scale: 2, default: 0 })
   totalCommission: number;
 
+  // Referral Commission Tracking
+  @Column('uuid', { nullable: true })
+  level1ReferrerId: string | null; // Direct referrer of client
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'level1ReferrerId' })
+  level1Referrer: User | null;
+
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  level1Commission: number; // 81% of totalCommission
+
+  @Column('uuid', { nullable: true })
+  level2ReferrerId: string | null; // Referrer of the referrer
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'level2ReferrerId' })
+  level2Referrer: User | null;
+
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  level2Commission: number; // 9% of totalCommission
+
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  superAdminCommission: number; // 10% of totalCommission
+
+  @Column({ default: false })
+  commissionsDistributed: boolean; // Track if commissions were paid
+
   // Promo Code (اختياري)
   @Column('uuid', { nullable: true })
   promoCodeId: string | null;

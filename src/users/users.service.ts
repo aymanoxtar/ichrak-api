@@ -206,4 +206,94 @@ export class UsersService {
 
     return { message: 'Password reset successfully' };
   }
+
+  // ============================================
+  // Referral System Methods
+  // ============================================
+
+  /**
+   * Get user's referral info (code + stats)
+   */
+  async getReferralInfo(userId: string): Promise<{
+    referralCode: string;
+    referralCount: number;
+    referralEarnings: number;
+    referredBy: { id: string; firstName: string; lastName: string } | null;
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['referredBy'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      referralCode: user.referralCode,
+      referralCount: user.referralCount,
+      referralEarnings: Number(user.referralEarnings),
+      referredBy: user.referredBy
+        ? {
+            id: user.referredBy.id,
+            firstName: user.referredBy.firstName,
+            lastName: user.referredBy.lastName,
+          }
+        : null,
+    };
+  }
+
+  /**
+   * Get detailed referral earnings
+   */
+  async getReferralEarnings(userId: string): Promise<{
+    totalEarnings: number;
+    referralCount: number;
+    level1Earnings: number;
+    level2Earnings: number;
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // For now, we store total in user.referralEarnings
+    // Level breakdown will be calculated when we implement order commission tracking
+    return {
+      totalEarnings: Number(user.referralEarnings),
+      referralCount: user.referralCount,
+      level1Earnings: Number(user.referralEarnings), // Will be split later
+      level2Earnings: 0, // Will be calculated later
+    };
+  }
+
+  /**
+   * Get list of users referred by this user
+   */
+  async getMyReferrals(userId: string): Promise<
+    {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      createdAt: Date;
+    }[]
+  > {
+    const referrals = await this.userRepository.find({
+      where: { referredById: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        createdAt: true,
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    return referrals;
+  }
 }

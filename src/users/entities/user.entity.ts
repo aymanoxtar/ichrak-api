@@ -95,6 +95,24 @@ export class User {
   @Column({ nullable: true })
   facebookId: string; // Facebook user ID
 
+  // Referral System
+  @Column({ unique: true, nullable: true })
+  referralCode: string; // Code unique l kol user (ex: "REF-ABC123")
+
+  @Column('uuid', { nullable: true })
+  referredById: string | null; // Chkun jab had user
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'referredById' })
+  referredBy: User | null;
+
+  // Referral earnings tracking
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  referralEarnings: number; // Total commission earned from referrals
+
+  @Column('integer', { default: 0 })
+  referralCount: number; // How many users this user referred
+
   @CreateDateColumn()
   createdAt: Date;
 

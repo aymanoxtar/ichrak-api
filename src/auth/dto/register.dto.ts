@@ -62,4 +62,9 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'Service ID is required for artisans' })
   @IsUUID()
   serviceId?: string;
+
+  // Referral code (optional) - code dyal user li jab had user
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 }
