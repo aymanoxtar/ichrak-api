@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsBoolean,
   IsUUID,
+  IsArray,
 } from 'class-validator';
 import { Role } from '../../common/enums';
 
@@ -55,8 +56,9 @@ export class CreateUserDto {
   @IsUUID()
   domainId?: string;
 
-  // Required for ARTISAN role (linked to Service)
+  // Required for ARTISAN role (linked to Services - multiple)
   @IsOptional()
-  @IsUUID()
-  serviceId?: string;
+  @IsArray()
+  @IsUUID('4', { each: true })
+  serviceIds?: string[];
 }

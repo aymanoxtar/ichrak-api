@@ -7,6 +7,8 @@ import {
   IsUUID,
   ValidateIf,
   IsNotEmpty,
+  IsArray,
+  ArrayMinSize,
 } from 'class-validator';
 import { Role } from '../../common/enums';
 
@@ -52,16 +54,25 @@ export class RegisterDto {
   @IsString()
   businessDescription?: string;
 
+  @IsOptional()
+  @IsString()
+  businessLogo?: string;
+
+  @IsOptional()
+  @IsString()
+  profileImage?: string;
+
   // Required for ADMIN role (Droguerie or Pièces Auto)
   @IsOptional()
   @IsUUID()
   domainId?: string;
 
-  // Required for ARTISAN - The service they provide
+  // Required for ARTISAN - The services they provide (multiple)
   @ValidateIf((o: RegisterDto) => o.role === Role.ARTISAN)
-  @IsNotEmpty({ message: 'Service ID is required for artisans' })
-  @IsUUID()
-  serviceId?: string;
+  @IsArray({ message: 'Service IDs must be an array' })
+  @ArrayMinSize(1, { message: 'At least one service is required for artisans' })
+  @IsUUID('4', { each: true, message: 'Each service ID must be a valid UUID' })
+  serviceIds?: string[];
 
   // Referral code (optional) - code dyal user li jab had user
   @IsOptional()

@@ -34,18 +34,24 @@ export class UsersService {
       throw new ConflictException('Email already exists');
     }
 
-    // Validate serviceId if role is ARTISAN
+    // Validate serviceIds if role is ARTISAN
+    let services: Service[] = [];
     if (createUserDto.role === Role.ARTISAN) {
-      if (!createUserDto.serviceId) {
-        throw new BadRequestException('Service is required for Artisan role');
+      if (!createUserDto.serviceIds || createUserDto.serviceIds.length === 0) {
+        throw new BadRequestException(
+          'At least one service is required for Artisan role',
+        );
       }
 
-      const service = await this.serviceRepository.findOne({
-        where: { id: createUserDto.serviceId, isActive: true },
+      // Validate all service IDs
+      services = await this.serviceRepository.find({
+        where: createUserDto.serviceIds.map((id) => ({ id, isActive: true })),
       });
 
-      if (!service) {
-        throw new BadRequestException('Invalid or inactive service');
+      if (services.length !== createUserDto.serviceIds.length) {
+        throw new BadRequestException(
+          'One or more services are invalid or inactive',
+        );
       }
 
       if (!createUserDto.phone) {
@@ -72,7 +78,13 @@ export class UsersService {
       }
     }
 
-    const user = this.userRepository.create(createUserDto);
+    // Create user (exclude serviceIds from spread - handled separately)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { serviceIds, ...userData } = createUserDto;
+    const user = this.userRepository.create({
+      ...userData,
+      services: services, // Assign services array for ManyToMany
+    });
     return this.userRepository.save(user);
   }
 
@@ -99,7 +111,7 @@ export class UsersService {
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['service', 'service.category', 'domain'],
+      relations: ['services', 'services.category', 'domain'],
     });
 
     if (!user) {

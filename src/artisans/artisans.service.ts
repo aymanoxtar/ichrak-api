@@ -21,18 +21,20 @@ export interface ServiceNearbyResult {
   nearestArtisanDistance: number;
 }
 
-interface ArtisanWithService {
-  service?: {
+interface FormattedService {
+  id: string;
+  title: string;
+  description: string;
+  images: string[];
+  category: {
     id: string;
-    title: string;
-    description: string;
-    images: string[];
-    category: {
-      id: string;
-      name: string;
-      domain: { id: string; name: string } | null;
-    } | null;
-  };
+    name: string;
+    domain: { id: string; name: string } | null;
+  } | null;
+}
+
+interface ArtisanWithServices {
+  services?: FormattedService[];
   distanceKm?: number;
 }
 
@@ -88,6 +90,28 @@ export class ArtisansService {
         ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
         : 0;
 
+    // Format services array (multiple services)
+    const formattedServices: FormattedService[] = (artisan.services || []).map(
+      (service) => ({
+        id: service.id,
+        title: service.title,
+        description: service.description,
+        images: service.images,
+        category: service.category
+          ? {
+              id: service.category.id,
+              name: service.category.name,
+              domain: service.category.domain
+                ? {
+                    id: service.category.domain.id,
+                    name: service.category.domain.name,
+                  }
+                : null,
+            }
+          : null,
+      }),
+    );
+
     return {
       id: artisan.id,
       firstName: artisan.firstName,
@@ -101,26 +125,7 @@ export class ArtisansService {
       businessLogo: artisan.businessLogo,
       latitude: artisan.latitude,
       longitude: artisan.longitude,
-      service: artisan.service
-        ? {
-            id: artisan.service.id,
-            title: artisan.service.title,
-            description: artisan.service.description,
-            images: artisan.service.images,
-            category: artisan.service.category
-              ? {
-                  id: artisan.service.category.id,
-                  name: artisan.service.category.name,
-                  domain: artisan.service.category.domain
-                    ? {
-                        id: artisan.service.category.domain.id,
-                        name: artisan.service.category.domain.name,
-                      }
-                    : null,
-                }
-              : null,
-          }
-        : null,
+      services: formattedServices, // Now returns array of services
       averageRating: Math.round(averageRating * 10) / 10,
       totalReviews,
       ...(distanceKm !== undefined && {
@@ -141,7 +146,7 @@ export class ArtisansService {
   }): Promise<any[]> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.service', 'service')
+      .leftJoinAndSelect('user.services', 'service')
       .leftJoinAndSelect('service.category', 'category')
       .leftJoinAndSelect('category.domain', 'domain')
       .where('user.role = :role', { role: Role.ARTISAN })
@@ -150,7 +155,7 @@ export class ArtisansService {
       .andWhere('user.longitude IS NOT NULL');
 
     if (params.serviceId) {
-      queryBuilder.andWhere('user.serviceId = :serviceId', {
+      queryBuilder.andWhere('service.id = :serviceId', {
         serviceId: params.serviceId,
       });
     }
@@ -200,29 +205,31 @@ export class ArtisansService {
       serviceId: undefined,
     });
 
-    // Extract unique services
+    // Extract unique services from all artisans (now multiple services per artisan)
     const servicesMap = new Map<string, ServiceNearbyResult>();
-    for (const artisan of nearbyArtisans as ArtisanWithService[]) {
-      if (artisan.service && !servicesMap.has(artisan.service.id)) {
-        servicesMap.set(artisan.service.id, {
-          id: artisan.service.id,
-          title: artisan.service.title,
-          description: artisan.service.description,
-          images: artisan.service.images,
-          category: artisan.service.category,
-          artisanCount: 0,
-          nearestArtisanDistance: artisan.distanceKm ?? Infinity,
-        });
-      }
-      if (artisan.service) {
-        const svc = servicesMap.get(artisan.service.id);
-        if (svc) {
-          svc.artisanCount++;
-          if (
-            artisan.distanceKm !== undefined &&
-            artisan.distanceKm < svc.nearestArtisanDistance
-          ) {
-            svc.nearestArtisanDistance = artisan.distanceKm;
+    for (const artisan of nearbyArtisans as ArtisanWithServices[]) {
+      if (artisan.services) {
+        for (const service of artisan.services) {
+          if (!servicesMap.has(service.id)) {
+            servicesMap.set(service.id, {
+              id: service.id,
+              title: service.title,
+              description: service.description,
+              images: service.images,
+              category: service.category,
+              artisanCount: 0,
+              nearestArtisanDistance: artisan.distanceKm ?? Infinity,
+            });
+          }
+          const svc = servicesMap.get(service.id);
+          if (svc) {
+            svc.artisanCount++;
+            if (
+              artisan.distanceKm !== undefined &&
+              artisan.distanceKm < svc.nearestArtisanDistance
+            ) {
+              svc.nearestArtisanDistance = artisan.distanceKm;
+            }
           }
         }
       }
@@ -298,14 +305,14 @@ export class ArtisansService {
   }): Promise<any[]> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.service', 'service')
+      .leftJoinAndSelect('user.services', 'service')
       .leftJoinAndSelect('service.category', 'category')
       .leftJoinAndSelect('category.domain', 'domain')
       .where('user.role = :role', { role: Role.ARTISAN })
       .andWhere('user.isActive = :isActive', { isActive: true });
 
     if (filters.serviceId) {
-      queryBuilder.andWhere('user.serviceId = :serviceId', {
+      queryBuilder.andWhere('service.id = :serviceId', {
         serviceId: filters.serviceId,
       });
     }
@@ -333,7 +340,7 @@ export class ArtisansService {
   async findOne(id: string): Promise<any> {
     const artisan = await this.userRepository.findOne({
       where: { id, role: Role.ARTISAN, isActive: true },
-      relations: ['service', 'service.category', 'service.category.domain'],
+      relations: ['services', 'services.category', 'services.category.domain'],
     });
 
     if (!artisan) {
@@ -352,6 +359,28 @@ export class ArtisansService {
         ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
         : 0;
 
+    // Format services array
+    const formattedServices: FormattedService[] = (artisan.services || []).map(
+      (service) => ({
+        id: service.id,
+        title: service.title,
+        description: service.description,
+        images: service.images,
+        category: service.category
+          ? {
+              id: service.category.id,
+              name: service.category.name,
+              domain: service.category.domain
+                ? {
+                    id: service.category.domain.id,
+                    name: service.category.domain.name,
+                  }
+                : null,
+            }
+          : null,
+      }),
+    );
+
     return {
       id: artisan.id,
       firstName: artisan.firstName,
@@ -365,26 +394,7 @@ export class ArtisansService {
       businessLogo: artisan.businessLogo,
       latitude: artisan.latitude,
       longitude: artisan.longitude,
-      service: artisan.service
-        ? {
-            id: artisan.service.id,
-            title: artisan.service.title,
-            description: artisan.service.description,
-            images: artisan.service.images,
-            category: artisan.service.category
-              ? {
-                  id: artisan.service.category.id,
-                  name: artisan.service.category.name,
-                  domain: artisan.service.category.domain
-                    ? {
-                        id: artisan.service.category.domain.id,
-                        name: artisan.service.category.domain.name,
-                      }
-                    : null,
-                }
-              : null,
-          }
-        : null,
+      services: formattedServices, // Now returns array of services
       averageRating: Math.round(averageRating * 10) / 10,
       totalReviews,
       reviews: reviews.map((r) => ({

@@ -5,7 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  ManyToMany,
   JoinColumn,
+  JoinTable,
   BeforeInsert,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -70,13 +72,15 @@ export class User {
   @JoinColumn({ name: 'domainId' })
   domain: Domain | null;
 
-  // Service for ARTISAN role (linked to Service → Category)
-  @Column('uuid', { nullable: true })
-  serviceId: string | null;
-
-  @ManyToOne(() => Service, { nullable: true })
-  @JoinColumn({ name: 'serviceId' })
-  service: Service | null;
+  // Services for ARTISAN role (linked to Service → Category)
+  // Artisan can provide multiple services
+  @ManyToMany(() => Service)
+  @JoinTable({
+    name: 'user_services', // Junction table
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'serviceId', referencedColumnName: 'id' },
+  })
+  services: Service[];
 
   // Geolocation (للتوصيل - يتزاد mor Client يبغي يشري)
   @Column({ nullable: true, type: 'decimal', precision: 10, scale: 8 })

@@ -85,18 +85,24 @@ export class AuthService {
       }
     }
 
-    // Validate serviceId if role is ARTISAN
+    // Validate serviceIds if role is ARTISAN
+    let services: Service[] = [];
     if (registerDto.role === Role.ARTISAN) {
-      if (!registerDto.serviceId) {
-        throw new BadRequestException('Service is required for Artisan role');
+      if (!registerDto.serviceIds || registerDto.serviceIds.length === 0) {
+        throw new BadRequestException(
+          'At least one service is required for Artisan role',
+        );
       }
 
-      const service = await this.serviceRepository.findOne({
-        where: { id: registerDto.serviceId, isActive: true },
+      // Validate all service IDs
+      services = await this.serviceRepository.find({
+        where: registerDto.serviceIds.map((id) => ({ id, isActive: true })),
       });
 
-      if (!service) {
-        throw new BadRequestException('Invalid or inactive service');
+      if (services.length !== registerDto.serviceIds.length) {
+        throw new BadRequestException(
+          'One or more services are invalid or inactive',
+        );
       }
 
       if (!registerDto.phone) {
@@ -129,10 +135,14 @@ export class AuthService {
     // Generate unique referral code for new user
     const newReferralCode = await this.generateReferralCode();
 
+    // Create user (exclude serviceIds from spread - handled separately)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { serviceIds, ...userData } = registerDto;
     const user = this.userRepository.create({
-      ...registerDto,
+      ...userData,
       referralCode: newReferralCode,
       referredById,
+      services: services, // Assign services array for ManyToMany
     });
     await this.userRepository.save(user);
 
