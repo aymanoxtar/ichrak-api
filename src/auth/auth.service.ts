@@ -259,6 +259,33 @@ export class AuthService {
     }
   }
 
+  // Generate API Key for Admin (static token for PHP site integration)
+  async generateApiKey(user: User): Promise<{ apiKey: string }> {
+    // Generate unique API key: ak_{userId-short}_{random}
+    const userIdShort = user.id.substring(0, 8);
+    const randomPart = Math.random().toString(36).substring(2, 15);
+    const apiKey = `ak_${userIdShort}_${randomPart}`;
+
+    // Save to user
+    await this.userRepository.update(user.id, { apiKey });
+
+    return { apiKey };
+  }
+
+  // Validate API Key and return user
+  async validateApiKey(apiKey: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { apiKey, isActive: true },
+      relations: ['domain'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid API Key');
+    }
+
+    return user;
+  }
+
   // OAuth Facebook Authentication
   async facebookAuth(facebookAuthDto: FacebookAuthDto) {
     try {

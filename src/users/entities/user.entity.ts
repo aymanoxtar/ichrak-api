@@ -117,6 +117,10 @@ export class User {
   @Column('integer', { default: 0 })
   referralCount: number; // How many users this user referred
 
+  // API Key for external integrations (PHP site, etc.)
+  @Column({ unique: true, nullable: true })
+  apiKey: string; // ex: "ak_5ac8f6ae_x7k9m2p4q8..."
+
   @CreateDateColumn()
   createdAt: Date;
 

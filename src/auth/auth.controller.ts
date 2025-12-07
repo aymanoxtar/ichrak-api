@@ -73,4 +73,14 @@ export class AuthController {
     const { password, ...result } = user;
     return result;
   }
+
+  @Post('generate-api-key')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Generate API Key for external integrations (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Returns new API key' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  generateApiKey(@CurrentUser() user: User) {
+    return this.authService.generateApiKey(user);
+  }
 }
