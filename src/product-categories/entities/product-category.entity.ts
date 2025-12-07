@@ -10,6 +10,7 @@ import {
   ManyToMany,
 } from 'typeorm';
 import { GlobalProduct } from '../../global-products/entities/global-product.entity';
+import { Domain } from '../../domains/entities/domain.entity';
 
 @Entity('product_categories')
 export class ProductCategory {
@@ -42,6 +43,14 @@ export class ProductCategory {
   // false = Catégorie spécialisée → Logique Points standard
   @Column({ default: false })
   isCommon: boolean;
+
+  // Domain (PIECE_AUTO or DROGUERIE)
+  @Column('uuid', { nullable: true })
+  domainId: string | null;
+
+  @ManyToOne(() => Domain, { nullable: true })
+  @JoinColumn({ name: 'domainId' })
+  domain: Domain | null;
 
   // Hierarchical relationship - Self-referencing
   @Column('uuid', { nullable: true })
